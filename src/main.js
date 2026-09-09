@@ -34,6 +34,7 @@ import { installScopeMask } from './scopeMask.js';
 import { initFirstRunExperience } from './firstRunExperience.js';
 import { initKeySetup } from './keySetup.js';
 import { loadPhotorealisticTileset } from './mapStartup.js';
+import { buildCesiumContextOptions } from './cesiumCompatibility.js';
 
 initLogoGaze();
 
@@ -109,11 +110,7 @@ async function init() {
         return el;
       })(),
       msaaSamples: 4,
-      contextOptions: {
-        webgl: {
-          preserveDrawingBuffer: true,
-        },
-      },
+      contextOptions: buildCesiumContextOptions(navigator),
     });
 
     // Cap the default render loop at 60 fps. Cesium's loop otherwise runs at
