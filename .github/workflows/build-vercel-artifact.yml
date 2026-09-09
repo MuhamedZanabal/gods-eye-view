@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -19,9 +19,34 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Rewrite static asset URLs for CDN hosting
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          base = 'https://cdn.jsdelivr.net/gh/MuhamedZanabal/gods-eye-view@live-dist'
+          for path in Path('dist').rglob('*'):
+              if path.is_file() and path.suffix.lower() in {'.html', '.js', '.css'}:
+                  text = path.read_text(encoding='utf-8', errors='ignore')
+                  for root in ('/assets/', '/models/', '/cesium/'):
+                      text = text.replace(root, base + root)
+                  path.write_text(text, encoding='utf-8')
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: vercel-dist
           path: dist
           if-no-files-found: error
           retention-days: 1
+      - name: Publish compiled assets to live-dist branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          git init
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b live-dist
+          git add -A
+          git commit -m 'deploy: publish compiled live assets'
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin live-dist
