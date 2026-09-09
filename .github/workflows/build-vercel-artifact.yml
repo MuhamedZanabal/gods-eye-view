@@ -24,11 +24,21 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           base = 'https://cdn.jsdelivr.net/gh/MuhamedZanabal/gods-eye-view@live-dist'
+          replacements = [
+              ('/assets/', base + '/assets/'),
+              ('/models/', base + '/models/'),
+              ('/cesium/', base + '/cesium/'),
+              ('/logo.svg', base + '/logo.svg'),
+              ('/pin.svg', base + '/pin.svg'),
+              ('/mic.svg', base + '/mic.svg'),
+              ('/location.svg', base + '/location.svg'),
+              ('/visual-presets.svg', base + '/visual-presets.svg'),
+          ]
           for path in Path('dist').rglob('*'):
               if path.is_file() and path.suffix.lower() in {'.html', '.js', '.css'}:
                   text = path.read_text(encoding='utf-8', errors='ignore')
-                  for root in ('/assets/', '/models/', '/cesium/'):
-                      text = text.replace(root, base + root)
+                  for source, target in replacements:
+                      text = text.replace(source, target)
                   path.write_text(text, encoding='utf-8')
           PY
       - uses: actions/upload-artifact@v4
